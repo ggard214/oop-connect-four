@@ -19,4 +19,8 @@ export class Column {
   getTokenAt(index) {
       return this.tokenManagement[index];
   }
+
+  isFull() {
+      return this.tokenManagement[0] !== null;
+  }
 }

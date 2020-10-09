@@ -1,6 +1,17 @@
 import { Game } from "./game.js";
+import { Column } from "./column.js";
+import { GameJsonSerializer } from '/game-json-serializer.js';
+import { GameJsonDeserializer } from '/game-json-deserializer.js';
 
 let game;
+const json = window.localStorage.getItem('connect-four');
+if (json) {
+  const deserializer = new GameJsonDeserializer(json);
+  console.log(deserializer)
+  game = deserializer.deserialize();
+  console.log(game)
+  updateUI();
+}
 
 function updateUI() {
   if (game === undefined) {
@@ -10,12 +21,13 @@ function updateUI() {
     document.getElementById("game-name").innerHTML = game.getName();
 
     let currentPlayer = game.currentPlayer;
+    let rowWhereYouClick = document.getElementById("click-targets");
     if (currentPlayer === 1) {
-      document.getElementById("click-targets").classList.add("black");
-      document.getElementById("click-targets").classList.remove("red");
+      rowWhereYouClick.classList.add("black");
+      rowWhereYouClick.classList.remove("red");
     } else {
-      document.getElementById("click-targets").classList.add("red");
-      document.getElementById("click-targets").classList.remove("black");
+      rowWhereYouClick.classList.add("red");
+      rowWhereYouClick.classList.remove("black");
     }
 
     for (let r = 0; r < 6; r++) {
@@ -34,8 +46,19 @@ function updateUI() {
         }
         }
     }
+    
+    for (let columnIndex = 0; columnIndex < 7; columnIndex += 1) {
+      const isColumnFull = game.isColumnFull(columnIndex);
+      const columnId = `column-${columnIndex}`;
+      const column = document.getElementById(columnId);
+
+      if (isColumnFull) {
+        column.classList.add('full');
+      } else {
+        column.classList.remove('full');
+      }
     }
-  
+    }  
 }
 
 window.addEventListener("DOMContentLoaded", (event) => {
@@ -63,7 +86,14 @@ window.addEventListener("DOMContentLoaded", (event) => {
   document.getElementById('click-targets').addEventListener("click", (event) => {
     const columnId = event.target.id;
     let columnNum = Number.parseInt(columnId.slice(7));
-    game.playInColumn(columnNum);
+    game.playInColumn(columnNum); // if we click a full column, it still switches TODO:
     updateUI();
+
+    const serializer = new GameJsonSerializer(game);
+    const json = serializer.serialize();
+    window.localStorage.setItem('connect-four', json);
+
+    updateUI();
+
   })
 });
